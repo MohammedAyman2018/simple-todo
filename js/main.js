@@ -4,7 +4,8 @@ const backgrounds = {
     layered: ['layered-peaks-haikei.svg', 'layered-steps-haikei.svg'],
     'stacked waves': ['stacked-waves-haikei.svg'],
     wave: ['wave-haikei.svg'],
-    'circle scatter': ['circle-scatter-haikei.svg']
+    'circle scatter': ['circle-scatter-haikei.svg'],
+    cute: ['1.jpeg','2.jpeg','3.jpeg','4.jpeg','5.jpeg','6.jpeg','7.jpeg']
 }
 
 function addEvents() {
@@ -94,11 +95,11 @@ function renderLists(tagName) {
             listsCard.innerHTML += `
                 <div class="col-md-4 my-3 col-lg-3">
                     <div class="list" style="background-image: url('./images/lists-bg/${list.bg}')">
-                        <a href="./list.html?name=${list.name}" class="list-name">
+                        <a href="./list.html?name=${list.name}" class="${list.bg.includes('cute') ? 'text-dark' : ''} list-name">
                             ${list.name}
                             ${list.tag ? `<span class="mx-1 badge rounded-pill bg-${tag.color} ${['light', 'info', 'warning'].includes(tag.color) ? 'text-dark' : ''}">${tag.name}</span>` : ''}
                         </a>
-                        <small class="list-date">${new Date(list.createdAt).toLocaleDateString().replaceAll('/', '-')}</small>
+                        <small class="${list.bg.includes('cute') ? 'text-dark' : ''} list-date">${new Date(list.createdAt).toLocaleDateString().replaceAll('/', '-')}</small>
                     </div>
                 </div>
             `
