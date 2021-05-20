@@ -65,7 +65,6 @@ function AddTask() {
         }
 
         list.items.push(task)
-        console.log(list);
         localStorage.setItem('lists', JSON.stringify(allLists))
         resetForm()
         renderTasks()
@@ -75,29 +74,47 @@ function AddTask() {
     }
 }
 
-function renderTasks() {
+function taskTemplate (task, idx, edit) {
+    return `
+        <li class="list-group-item d-flex justify-content-between align-items-start">
+            <div class="ms-2 me-auto">
+                <div class="fw-bold">
+                    ${task.title}
+                    ${task.tag ? `<span class="mx-1 badge rounded-pill bg-${task.tag.color} ${['light', 'info', 'warning'].includes(task.tag.color) ? 'text-dark' : ''}">${task.tag.name}</span>` : ''}
+                </div>
+            </div> 
+                ${ edit ? 
+                    `<i data-idx="${idx}" data-btnType="undo" class="bi bi-reply text-success cursor-pointer mx-2"></i>` :
+                    `<i data-idx="${idx}" data-btnType="archive" class="bi bi-archive text-danger cursor-pointer mx-2"></i>
+                    <i data-idx="${idx}" data-title="${task.title}" data-btnType="edit" class="bi bi-pen text-warning cursor-pointer mx-2"></i>
+                    <input class="form-check-input task-done" type="checkbox" value="${idx}" aria-label="">`
+                }
+        </li>
+    `
+}
+
+function renderTasks(tagName) {
     const tasksList = document.getElementById('tasksList')
     const archivedList = document.getElementById('archivedList')
-    const tasks = list.items
-    const archive = list.archive
+    let tasks = list.items
+    let archive = list.archive
+
+    if (tagName) {
+        if (tagName === 'Without Tag') {
+            tasks = tasks.filter((x) => !x.tag)
+            archive = archive.filter((x) => !x.tag)
+        } else if (tagName !== 'Without Tag' && tagName !== 'all') {
+            tasks = tasks.filter((x) => x.tag && x.tag.name === tagName)
+            archive = archive.filter((x) => x.tag && x.tag.name === tagName)
+        }
+    }
+
     tasksList.innerHTML = ''
     archivedList.innerHTML = ''
 
     if (tasks.length > 0) {
         tasks.forEach((task, idx) => {
-            tasksList.innerHTML += `
-            <li class="list-group-item d-flex justify-content-between align-items-start">
-                <div class="ms-2 me-auto">
-                    <div class="fw-bold">
-                        ${task.title}
-                        <span class="mx-1 badge rounded-pill bg-${task.tag.color} ${['light', 'info', 'warning'].includes(task.tag.color) ? 'text-dark' : ''}">${task.tag.name}</span>
-                    </div>
-                </div>
-                <i data-idx="${idx}" data-btnType="archive" class="bi bi-archive text-danger cursor-pointer mx-2"></i>
-                <i data-idx="${idx}" data-title="${task.title}" data-btnType="edit" class="bi bi-pen text-warning cursor-pointer mx-2"></i>
-                <input class="form-check-input task-done" type="checkbox" value="${idx}" aria-label="">
-            </li>
-            `
+            tasksList.innerHTML += taskTemplate(task, idx, false)
         })
     } else {
         tasksList.innerHTML = '<p>Add your first task now.</p>'
@@ -105,17 +122,7 @@ function renderTasks() {
 
     if (archive.length > 0) {
         archive.forEach((task, idx) => {
-            archivedList.innerHTML += `
-        <li class="list-group-item d-flex justify-content-between align-items-start">
-            <div class="ms-2 me-auto">
-                <div class="fw-bold">
-                    ${task.title}
-                    <span class="mx-1 badge rounded-pill bg-${task.tag.color} ${['light', 'info', 'warning'].includes(task.tag.color) ? 'text-dark' : ''}">${task.tag.name}</span>
-                </div>
-            </div>
-            <i data-idx="${idx}" data-btnType="undo" class="bi bi-reply text-success cursor-pointer mx-2"></i>
-        </li>
-        `
+            archivedList.innerHTML += taskTemplate(task, idx, true)
         });
     } else {
         archivedList.innerHTML = '<p>Your archive is clean.</p>'
@@ -139,7 +146,7 @@ function validateForm() {
     const tagColorInput = document.querySelector('input[name="inlineRadioOptions"]:checked')
 
     return !!newTaskInput.value &&
-        !!tagNameInput.value &&
+        ((tagColorInput.value !== 'none' && !!tagNameInput.value) || tagColorInput.value === 'none') &&
         tagColorInput
 }
 
@@ -192,4 +199,20 @@ function undoTaskEvent() {
     }))
 }
 
-renderTasks()
+function filterLists() {
+    const tagList = document.getElementById('filters')
+    tagList.addEventListener('change', (e) => {
+        renderTasks(e.target.value)
+    })
+
+    if (list.items) {
+        const tags = [... new Set(list.items.map(x => x.tag ? x.tag.name : 'Without Tag'))]
+        tagList.innerHTML = '<option value="all">All</option>'
+        tags.forEach(tag => {
+            tagList.innerHTML += `<option value='${tag}'>${tag}</option>`
+        })
+    }
+}
+
+renderTasks('all')
+filterLists()

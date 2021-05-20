@@ -40,15 +40,16 @@ function createList() {
         const randomIdx = Math.floor(Math.random() * backgrounds[activeBg].length)
         const bg = `/${activeBg}/${backgrounds[activeBg][randomIdx]}`
 
-        const tag = {
+        const checkedColor = document.querySelector('input[name="inlineRadioOptions"]:checked').value
+        const tag = checkedColor !== 'none' ? {
             name: document.getElementById('Tag').value,
             color: document.querySelector('input[name="inlineRadioOptions"]:checked').value
-        }
+        } : null
 
         const list = {
             name,
             bg,
-            tag: JSON.stringify(tag),
+            tag: checkedColor !== 'none' ? JSON.stringify(tag) : null,
             items: [],
             archive: [],
             createdAt: Date.now()
@@ -64,25 +65,38 @@ function createList() {
         resetPage()
         renderLists()
     } else {
-      const toast = new bootstrap.Toast(document.querySelector('.toast'))
-      toast.show()
+        const toast = new bootstrap.Toast(document.querySelector('.toast'))
+        toast.show()
     }
 }
 
-function renderLists() {
+function renderLists(tagName) {
     const listsCard = document.getElementById('listsCard').lastElementChild
     const listsInStorage = localStorage.getItem('lists')
+    let displayedLists = []
+
+    if (tagName) {
+        if (tagName === 'Without Tag') {
+            displayedLists = JSON.parse(listsInStorage).filter((x) => !JSON.parse(x.tag))
+        } else if (tagName === 'all') {
+            displayedLists = JSON.parse(listsInStorage)
+        } else {
+            displayedLists = JSON.parse(listsInStorage).filter((x) => JSON.parse(x.tag) && JSON.parse(x.tag).name === tagName)
+        }
+    } else {
+        displayedLists = JSON.parse(listsInStorage)
+    }
 
     if (listsInStorage && JSON.parse(listsInStorage).length > 0) {
         listsCard.innerHTML = ''
-        JSON.parse(listsInStorage).forEach(list => {
+        displayedLists.forEach(list => {
             const tag = JSON.parse(list.tag)
             listsCard.innerHTML += `
                 <div class="col-md-4 my-3 col-lg-3">
                     <div class="list" style="background-image: url('./images/lists-bg/${list.bg}')">
                         <a href="./list.html?name=${list.name}" class="list-name">
                             ${list.name}
-                            <span class="mx-1 badge rounded-pill bg-${tag.color} ${['light', 'info', 'warning'].includes(tag.color) ? 'text-dark' : ''}">${tag.name}</span>
+                            ${list.tag ? `<span class="mx-1 badge rounded-pill bg-${tag.color} ${['light', 'info', 'warning'].includes(tag.color) ? 'text-dark' : ''}">${tag.name}</span>` : ''}
                         </a>
                         <small class="list-date">${new Date(list.createdAt).toLocaleDateString().replaceAll('/', '-')}</small>
                     </div>
@@ -115,15 +129,32 @@ function validateForm() {
     const activeBg = document.querySelector('#bgType img.active')
 
     return !!listNameInput.value &&
-        tagNameInput.value &&
+        ((tagColor.value !== 'none' && tagNameInput.value) || tagColor.value === 'none') &&
         tagColor && tagColor.checked &&
         activeBg && activeBg.nextElementSibling.classList.contains('active') &&
         activeBg.classList.contains('active')
 }
 
+function filterLists () {
+    const tagList = document.getElementById('filters')
+    tagList.addEventListener('change', (e) => {
+        renderLists(e.target.value)
+    })
+    
+    if (localStorage.getItem('lists')) {
+        const tags = [... new Set(JSON.parse(localStorage.getItem('lists')).map(x => JSON.parse(x.tag) ? JSON.parse(x.tag).name : 'Without Tag'))]
+    
+        tagList.innerHTML = '<option value="all">All</option>'
+        tags.forEach(tag => {
+            tagList.innerHTML += `<option value='${tag}'>${tag}</option>`
+        })
+    }
+}
+
 (
     () => {
         addEvents()
-        renderLists()
+        renderLists(),
+        filterLists()
     }
 )()
