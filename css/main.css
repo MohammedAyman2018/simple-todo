@@ -1,0 +1,33 @@
+@import url(./modules/lists.css);
+@import url(./modules/createList.css);
+
+body, html {
+    min-height: 100%;
+}
+
+body {
+    background-image: url('../images/blob-scene-haikei.svg');
+    background-position: center center;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+
+.card {
+    box-shadow: rgba(0, 0, 0, 0.8) 0px 4px 12px;
+}
+
+
+a {
+    text-decoration: none;
+    color: white
+}
+
+a:hover {
+    text-decoration: none;
+    color: white
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
